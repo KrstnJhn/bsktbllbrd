@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Control Baord M</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background-color: #444;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    flex-direction: column;
+  }
+
+  .container {
+    background-color: #333;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    padding: 30px;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .header {
+    font-size: 1em;
+    margin-bottom: 5px;
+    color: #eee;
+  }
+
+  .timer-display {
+    background-color: #ff8c00;
+    color: #fff;
+    font-family: 'LCDMono', monospace;
+    font-size: 7em;
+    padding: 5px 5px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .scores-container {
+    width: 100%;
+    margin: 20px 0;
+  }
+
+  .teams-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .team-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+
+  .shot-clock-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .shot-clock-controls {
+    margin-top: 20px;
+  }
+
+  .team-name {
+    font-weight: bold;
+    font-size: 1.8em;
+    margin-bottom: 10px;
+    color: #ddd;
+  }
+
+  .score {
+    font-family: 'LCDMono', monospace;
+    font-size: 5em;
+    background-color: #222;
+    color: #fff;
+    padding: 20px 40px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    min-width: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .score-controls {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .score-controls button {
+    font-size: 1em;
+    padding: 8px 15px;
+    margin: 3px 0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #555;
+    color: #fff;
+    transition: background-color 0.3s ease;
+  }
+
+  .score-controls button:hover {
+    background-color: #777;
+  }
+
+  .controls-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .controls-group button {
+    font-size: 1.1em;
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    position: relative;
+    margin: 0 10px;
+    color: transparent;
+  }
+
+  .controls-group button#startPauseTimer {
+    background: linear-gradient(135deg, #0aee15, #034b06);
+    color: #fff;
+  }
+
+  .controls-group button#startPauseTimer::before {
+    position: absolute;
+    font-size: 0.5em;
+    top: 50%;
+    left: 55%;
+    transform: translate(-50%, -50%);
+  }
+
+  .controls-group button#startPauseTimer.paused {
+    background: linear-gradient(135deg, #f80101, #910f04);
+  }
+
+  .controls-group button#startPauseTimer.paused::before {
+    left: 50%;
+  }
+
+  .controls-group button#resetGameTimer {
+    background: linear-gradient(135deg, #f80101, #910f04);
+    color: #fff;
+  }
+
+  .controls-group button#resetGameTimer::before {
+    content: "↻";
+    position: absolute;
+    font-size: 1.8em;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .controls-group button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(-5deg); }
+    40% { transform: rotate(5deg); }
+    60% { transform: rotate(-5deg); }
+    80% { transform: rotate(5deg); }
+  }
+
+  .timer-running {
+    animation: pulse 2s infinite;
+  }
+
+  .shot-clock-label {
+    font-size: 1.2em;
+    color: #ddd;
+    margin-bottom: 5px;
+  }
+
+  .shot-clock {
+    font-family: 'LCDMono', monospace;
+    font-size: 3.5em;
+    background-color: #222;
+    color: #ffeb3b;
+    padding: 10px 25px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    min-width: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .shot-clock-controls button {
+    font-size: 1em;
+    padding: 8px 15px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #666;
+    color: #fff;
+    transition: background-color 0.3s ease;
+  }
+
+  .shot-clock-controls button:hover {
+    background-color: #888;
+  }
+
+  .quarter-selector {
+    margin: 20px 0;
+    width: 100%;
+  }
+
+  .quarter-label {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #ddd;
+  }
+
+  .quarter-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .quarter-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background-color: #555;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .quarter-btn:hover {
+    background-color: #777;
+  }
+
+  .quarter-btn.active {
+    background: linear-gradient(135deg, #ffdd1a, #d1b201);
+    font-weight: bold;
+  }
+
+  .foul-indicator {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .foul-circles {
+    display: flex;
+    gap: 10px;
+  }
+
+  .foul-circle {
+    width: 30px;
+    height: 15px;
+    border-radius: 25%;
+    background-color: #555;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .foul-circle.active {
+    background-color: #ff0000;
+  }
+
+  #connection-status {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    z-index: 1000;
+  }
+
+  @media (orientation: landscape) {
+    .container {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding: 40px;
+    }
+    .header {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .timer-display {
+      width: 100%;
+      margin-bottom: 30px;
+    }
+    .main-area {
+      width: auto;
+      flex-direction: row;
+      margin-bottom: 0;
+    }
+    .team-score {
+      margin: 0 20px;
+    }
+    .shot-clock-area {
+      width: 100%;
+      margin-top: 30px;
+    }
+  }
+
+  /* Responsive styles for tablets and smaller desktops */
+  @media (max-width: 768px) {
+    body {
+      padding: 10px;
+    }
+    .container {
+      flex-direction: column;
+      max-width: 100%;
+      padding: 20px;
+    }
+    .header {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+    .timer-row {
+      flex-direction: column;
+      gap: 10px;
+    }
+    .timer-display {
+      font-size: 5em;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    .arrow-btn {
+      font-size: 1.5em;
+    }
+    .controls-group {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .scores-container {
+      width: 100%;
+    }
+    .teams-row {
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .team-score {
+      width: 100%;
+      margin: 0;
+      align-items: center;
+    }
+    .team-name {
+      font-size: 1.5em;
+    }
+    .score {
+      font-size: 3.5em;
+      min-width: auto;
+      padding: 15px 20px;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto 10px auto;
+    }
+    .score-controls {
+      flex-direction: row;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .score-controls button {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 1em;
+    }
+    .quarter-selector {
+      margin: 15px 0;
+      width: 100%;
+    }
+    .quarter-buttons {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .quarter-btn {
+      flex: 1 1 40px;
+      padding: 8px 0;
+      font-size: 1em;
+    }
+    .shot-clock-area {
+      width: 100%;
+      margin-top: 20px;
+      align-items: center;
+    }
+    .shot-clock {
+      font-size: 2.5em;
+      padding: 8px 15px;
+      min-width: 80px;
+    }
+    .shot-clock-controls button {
+      padding: 8px 10px;
+      font-size: 0.9em;
+    }
+  }
+
+  /* Responsive styles for mobile phones */
+  @media (max-width: 480px) {
+    body {
+      padding: 5px;
+    }
+    .header {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+    .timer-display {
+      font-size: 4em;
+      margin-bottom: 15px;
+    }
+    .arrow-btn {
+      font-size: 1.2em;
+    }
+    .controls-group {
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .controls-group button {
+      width: 100%;
+      height: 50px;
+      font-size: 1.1em;
+      margin: 0;
+    }
+    .scores-container {
+      width: 100%;
+    }
+    .teams-row {
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .team-score {
+      width: 100%;
+      margin: 0;
+      align-items: center;
+    }
+    .team-name {
+      font-size: 1.2em;
+    }
+    .score {
+      font-size: 2.5em;
+      padding: 10px 15px;
+      width: 100%;
+      max-width: none;
+      margin: 0 0 10px 0;
+    }
+    .score-controls {
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .score-controls button {
+      width: 100%;
+      padding: 10px 0;
+      font-size: 1em;
+    }
+    .quarter-selector {
+      margin: 10px 0;
+      width: 100%;
+    }
+    .quarter-buttons {
+      flex-direction: column;
+      gap: 10px;
+      justify-content: center;
+    }
+    .quarter-btn {
+      width: 100%;
+      padding: 10px 0;
+      font-size: 1em;
+    }
+    .shot-clock-area {
+      width: 100%;
+      margin-top: 15px;
+      align-items: center;
+    }
+    .shot-clock {
+      font-size: 2em;
+      padding: 6px 10px;
+      min-width: 70px;
+    }
+    .shot-clock-controls button {
+      padding: 6px 8px;
+      font-size: 0.9em;
+    }
+  }
+
+  @font-face {
+    font-family: 'LCDMono';
+    src: url('your-lcd-mono-font.woff2') format('woff2'),
+         url('your-lcd-mono-font.woff') format('woff');
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="header">SCOREBOARD CONTROL PANNEL</h1>
+    <div class="timer-row" style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+      <div class="arrow-btn" id="home-arrow" style="font-size: 5em; cursor: pointer; color: white;" onclick="toggleArrow('home')">◄</div>
+    <div class="timer-display" id="timer" onclick="showTimeInput()">11:00</div>
+      <div class="arrow-btn" id="away-arrow" style="font-size: 5em; cursor: pointer; color: white;" onclick="toggleArrow('away')">►</div>
+    </div>
+    <div class="controls-group">
+      <button id="startPauseTimer" onclick="toggleGameTimer()">PLAY</button>
+      <button id="resetGameTimer" onclick="resetGameTimer()"></button>
+      <button id="resetTeamScores" onclick="resetTeamScores()" title="Reset Team Scores" style="background: linear-gradient(90deg, #ec4f06, #ec2806); color: white; width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); position: relative; margin: 0 10px;">
+        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.8em; font-weight: bold;">Reset Score</span>
+      </button>
+      <button id="buzzerButton" style="background: linear-gradient(135deg, #ffdd1a, #bda102); color: white; width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); position: relative; margin: 0 10px;">
+        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1em; font-weight: bold;">Buzz</span>
+      </button>
+      <button id="swapTeams" onclick="swapTeams()" style="background: linear-gradient(135deg, #d001f5, #640375); color: white; width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); position: relative; margin: 0 10px;">
+        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5em;">⇄</span>
+      </button>
+      <button id="viewerLink" onclick="window.open('viewer.html', '_blank')" style="background: linear-gradient(135deg, #2051f5, #012dbd); color: white; width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); position: relative; margin: 0 10px;">
+        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5em;">👁️</span>
+      </button>
+    </div>
+    <div class="scores-container">
+      <div class="teams-row">
+        <div class="team-score">
+          <h2 class="team-name">
+            <input type="text" id="home-team-name" value="HOME" class="team-name-input" onchange="updateTeamName('home', this.value)">
+          </h2>
+          <div class="score" id="team-a-score">0</div>
+          <div class="foul-indicator">
+            <div class="foul-circles">
+              <div class="foul-circle" onclick="toggleFoul('home', 1)"></div>
+              <div class="foul-circle" onclick="toggleFoul('home', 2)"></div>
+              <div class="foul-circle" onclick="toggleFoul('home', 3)"></div>
+              <div class="foul-circle" onclick="toggleFoul('home', 4)"></div>
+              <div class="foul-circle" onclick="toggleFoul('home', 5)"></div>
+            </div>
+          </div>
+          <div class="score-controls">
+            <button onclick="updateScore('home', 1)">+1</button>
+            <button onclick="updateScore('home', 2)">+2</button>
+            <button onclick="updateScore('home', 3)">+3</button>
+          </div>
+          <div class="score-controls">
+            <button onclick="updateScore('home', -1)">- 1</button>
+            <button onclick="updateScore('home', -2)">- 2</button>
+            <button onclick="updateScore('home', -3)">- 3</button>
+          </div>
+        </div>
+    
+  <div>
+    <div class="quarter-selector">
+      <div class="quarter-label"></div>
+      <div class="quarter-buttons">
+        <button class="quarter-btn active" onclick="setQuarter(1)">1st</button>
+        <button class="quarter-btn" onclick="setQuarter(2)">2nd</button>
+        <button class="quarter-btn" onclick="setQuarter(3)">3rd</button>
+        <button class="quarter-btn" onclick="setQuarter(4)">4th</button>
+        <div class="dropdown">
+          <button id="otDropdownBtn" class="quarter-btn" onclick="toggleOtDropdown()">OT</button>
+          <div id="otDropdown" class="dropdown-content" style="display:none; position:absolute; background-color:#555; border-radius: 5px; margin-top: 5px; z-index: 100;">
+            <button class="quarter-btn" onclick="setQuarter('OT')">OT</button>
+            <button class="quarter-btn" onclick="setQuarter('OT2')">OT2</button>
+            <button class="quarter-btn" onclick="setQuarter('OT3')">OT3</button>
+            <button class="quarter-btn" onclick="setQuarter('OT4')">OT4</button>
+            <button class="quarter-btn" onclick="setQuarter('OT5')">OT5</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="shot-clock-area" id="shotClockArea">
+      <div class="shot-clock-label">SHOT CLOCK</div>
+      <div class="shot-clock" id="shot-clock" onclick="window.open('shotclock-viewer.html', '_blank')">24</div>
+      <div class="shot-clock-controls">
+        <button onclick="resetShotClock(24)">24</button>
+        <button onclick="resetShotClock(14)">14</button>
+      </div>
+    </div>
+  </div>
+
+
+        <div class="team-score">
+          <h2 class="team-name">
+            <input type="text" id="away-team-name" value="AWAY" class="team-name-input" onchange="updateTeamName('away', this.value)">
+          </h2>
+          <div class="score" id="team-b-score">0</div>
+          <div class="foul-indicator">
+            <div class="foul-circles">
+              <div class="foul-circle" onclick="toggleFoul('away', 1)"></div>
+              <div class="foul-circle" onclick="toggleFoul('away', 2)"></div>
+              <div class="foul-circle" onclick="toggleFoul('away', 3)"></div>
+              <div class="foul-circle" onclick="toggleFoul('away', 4)"></div>
+              <div class="foul-circle" onclick="toggleFoul('away', 5)"></div>
+            </div>
+          </div>
+          <div class="score-controls">
+            <button onclick="updateScore('away', 1)">+1</button>
+            <button onclick="updateScore('away', 2)">+2</button>
+            <button onclick="updateScore('away', 3)">+3</button>
+          </div>
+          <div class="score-controls">
+            <button onclick="updateScore('away', -1)">- 1</button>
+            <button onclick="updateScore('away', -2)">- 2</button>
+            <button onclick="updateScore('away', -3)">- 3</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Connection status element
+    const connectionStatus = document.createElement('div');
+    connectionStatus.id = 'connection-status';
+    document.body.appendChild(connectionStatus);
+
+    // Connection status display
+    function showConnectionStatus(status) {
+      const statusElement = document.getElementById('connection-status');
+      if (status === 'connected') {
+        statusElement.textContent = '✔';
+        statusElement.style.backgroundColor = '#4CAF50';
+        statusElement.style.color = 'white';
+      } else {
+        statusElement.textContent = '✖';
+        statusElement.style.backgroundColor = '#F44336';
+        statusElement.style.color = 'white';
+      }
+    }
+
+    let audio = new Audio('Buzzer.mp3');
+    let buzzerAudio = new Audio('Buzzer.mp3');
+    buzzerAudio.loop = true;
+
+    let gameTimerInterval;
+    let gameTimeLeft = 11 * 60;
+    let customGameTime = 11 * 60; // Store operator-set time
+    let isGameTimerRunning = false;
+    const startPauseButton = document.getElementById('startPauseTimer');
+    const buzzerButton = document.getElementById('buzzerButton');
+
+    let shotClockInterval;
+    let shotTimeLeft = 24;
+    const shotClockArea = document.getElementById('shotClockArea');
+
+    // Flags to track if buzzer played at 0.5 seconds
+    let gameTimerHalfSecondPlayed = false;
+    let shotClockHalfSecondPlayed = false;
+
+    // Buzzer button event handlers
+    buzzerButton.addEventListener('mousedown', () => {
+      buzzerAudio.play();
+    });
+    buzzerButton.addEventListener('mouseup', () => {
+      buzzerAudio.pause();
+      buzzerAudio.currentTime = 0;
+    });
+    buzzerButton.addEventListener('mouseleave', () => {
+      buzzerAudio.pause();
+      buzzerAudio.currentTime = 0;
+    });
+    buzzerButton.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      buzzerAudio.play();
+    }, { passive: false });
+    buzzerButton.addEventListener('touchend', () => {
+      buzzerAudio.pause();
+      buzzerAudio.currentTime = 0;
+    });
+
+    // Key event handlers for 'b' key
+    let buzzerKeyPressed = false;
+    document.addEventListener('keydown', (event) => {
+      if (event.key.toLowerCase() === 'b' && !buzzerKeyPressed) {
+        buzzerKeyPressed = true;
+        buzzerAudio.play();
+        event.preventDefault();
+      }
+    });
+    document.addEventListener('keyup', (event) => {
+      if (event.key.toLowerCase() === 'b') {
+        buzzerKeyPressed = false;
+        buzzerAudio.pause();
+        buzzerAudio.currentTime = 0;
+        event.preventDefault();
+      }
+    });
+
+    function updateScore(team, points) {
+      if (team === 'home') {
+        homeScore = Math.max(0, homeScore + points);
+        document.getElementById('team-a-score').textContent = homeScore;
+      } else if (team === 'away') {
+        awayScore = Math.max(0, awayScore + points);
+        document.getElementById('team-b-score').textContent = awayScore;
+      }
+      saveToLocalStorage();
+    }
+
+    function toggleGameTimer() {
+      console.log('Toggling timer, current state:', isGameTimerRunning);
+      
+      if (!isGameTimerRunning) {
+        // Start the timer
+        isGameTimerRunning = true;
+        startPauseButton.textContent = 'PAUSE';
+        startPauseButton.classList.add('paused');
+        
+        // Clear any existing interval to prevent duplicates
+        if (gameTimerInterval) {
+          clearInterval(gameTimerInterval);
+        }
+        
+        gameTimerInterval = setInterval(updateGameTimer, 1000);
+        console.log('Timer started');
+        // Start shot clock only if game time > 14 and not already running
+        if (gameTimeLeft > 14 && !shotClockInterval) {
+          shotClockArea.style.display = 'flex';
+          shotClockInterval = setInterval(updateShotClock, 1000);
+        }
+        
+      } else {
+        // Pause the timer
+        isGameTimerRunning = false;
+        startPauseButton.textContent = 'PLAY';
+        startPauseButton.classList.remove('paused');
+        
+        // Clear intervals
+        if (gameTimerInterval) {
+          clearInterval(gameTimerInterval);
+          gameTimerInterval = null;
+        }
+        if (shotClockInterval) {
+          clearInterval(shotClockInterval);
+          shotClockInterval = null;
+        }
+        console.log('Timer paused');
+      }
+      saveToLocalStorage();
+    }
+
+    function resetGameTimer() {
+      isGameTimerRunning = false;
+      startPauseButton.textContent = 'PLAY';
+      startPauseButton.classList.remove('paused');
+      clearInterval(gameTimerInterval);
+      gameTimeLeft = customGameTime; // Use operator-set time if available
+      gameTimerHalfSecondPlayed = false; // Reset half-second flag
+      updateGameTimerDisplay();
+      resetShotClock(24);
+      resetFouls();
+      saveToLocalStorage();
+    }
+
+    function showTimeInput() {
+      if (isGameTimerRunning) return;
+      
+      const currentTime = document.getElementById('timer').textContent;
+      const newTime = prompt('Enter new time (MM:SS):', currentTime);
+      
+      if (newTime && newTime !== currentTime) {
+        const timeParts = newTime.split(':');
+        if (timeParts.length === 2) {
+          const minutes = parseInt(timeParts[0]);
+          const seconds = parseInt(timeParts[1]);
+          
+          if (!isNaN(minutes) && !isNaN(seconds) && 
+              minutes >= 0 && seconds >= 0 && seconds < 60) {
+            gameTimeLeft = minutes * 60 + seconds;
+            customGameTime = gameTimeLeft; // Store the operator-set time
+            updateGameTimerDisplay();
+            saveToLocalStorage();
+            return;
+          }
+        }
+        alert('Invalid time format. Please use MM:SS');
+      }
+    }
+
+    function updateGameTimer() {
+      if (gameTimeLeft > 0) {
+        gameTimeLeft -= 1;
+        updateGameTimerDisplay();
+
+        if (gameTimeLeft <= 0.8 && !gameTimerHalfSecondPlayed) {
+          audio.play();
+          gameTimerHalfSecondPlayed = true;
+        }
+      } else {
+        isGameTimerRunning = false;
+        startPauseButton.textContent = 'PLAY';
+        startPauseButton.classList.remove('paused');
+        clearInterval(gameTimerInterval);
+        showNotification("Game Time's up!");
+        // Play buzzer when game timer expires
+        audio.play();
+      }
+      saveToLocalStorage();
+    }
+
+    function updateGameTimerDisplay() {
+      const minutes = Math.floor(gameTimeLeft / 60).toString().padStart(2, '0');
+      const seconds = Math.floor(gameTimeLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+      
+      // Show/hide shot clock based on game time
+      if (gameTimeLeft < shotTimeLeft) {
+        shotClockArea.style.display = 'none';
+        clearInterval(shotClockInterval);
+      } else {
+        shotClockArea.style.display = 'flex';
+      }
+    }
+
+    function resetShotClock(seconds) {
+      clearInterval(shotClockInterval);
+      shotTimeLeft = seconds;
+      shotClockHalfSecondPlayed = false; // Reset half-second flag
+      const shotClock = document.getElementById('shot-clock');
+      shotClock.style.color = '#ffeb3b';
+      shotClock.style.animation = 'none';
+      updateShotClockDisplay();
+      if (isGameTimerRunning && gameTimeLeft > 24) {
+        shotClockInterval = setInterval(updateShotClock, 1000);
+      }
+      saveToLocalStorage();
+    }
+
+    function updateShotClock() {
+      if (shotTimeLeft > 0) {
+        shotTimeLeft -= 1;
+        updateShotClockDisplay();
+
+        if (shotTimeLeft <= 0.8 && !shotClockHalfSecondPlayed) {
+          audio.play();
+          shotClockHalfSecondPlayed = true;
+        }
+      } else {
+        clearInterval(shotClockInterval);
+        showNotification("SHOT CLOCK VIOLATION!");
+        // Pause both timers
+        if (isGameTimerRunning) {
+          toggleGameTimer();
+        }
+        // Flash shot clock display and play buzzer
+        const shotClock = document.getElementById('shot-clock');
+        shotClock.style.color = '#ff0000';
+        shotClock.style.animation = 'pulse 0.5s infinite';
+        shotTimeLeft = 0;
+        updateShotClockDisplay();
+        audio.play();
+      }
+      saveToLocalStorage();
+    }
+
+    function updateShotClockDisplay() {
+      document.getElementById('shot-clock').textContent = shotTimeLeft.toString().padStart(2, '0');
+    }
+
+    let homeTeamName = "HOME";
+    let awayTeamName = "AWAY";
+
+    function updateTeamName(team, name) {
+      if (team === 'home') {
+        homeTeamName = name;
+      } else {
+        awayTeamName = name;
+      }
+      saveToLocalStorage();
+      // Force storage event to trigger real-time updates
+      window.dispatchEvent(new Event('storage'));
+    }
+
+    let ballPosition = 'home'; // Default to home
+
+    function toggleArrow(position) {
+      const homeArrow = document.getElementById('home-arrow');
+      const awayArrow = document.getElementById('away-arrow');
+      
+      if (position === 'home') {
+        homeArrow.style.color = 'red';
+        awayArrow.style.color = 'white';
+        ballPosition = 'home';
+      } else {
+        homeArrow.style.color = 'white';
+        awayArrow.style.color = 'red';
+        ballPosition = 'away';
+      }
+      // Force localStorage update and dispatch storage event
+      saveToLocalStorage();
+      window.dispatchEvent(new Event('storage'));
+    }
+
+    // Initialize keydown handler
+    let keydownHandler = function(event) {
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement.tagName === 'INPUT' && 
+                           (activeElement.id === 'home-team-name' || 
+                            activeElement.id === 'away-team-name');
+      
+      if (!isInputFocused) {
+        const controlKeys = [' ', 'r', '1', '2', '3', '4', '5', 'q', 'w', 'e', 'a', 's', 'd', 'u', 'i', 'o', 'j', 'k', 'l', ',', '.'];
+        if (controlKeys.includes(event.key.toLowerCase())) {
+          event.preventDefault();
+        }
+
+        switch(event.key.toLowerCase()) {
+          // Home team controls
+          case 'q': updateScore('home', 1); break;
+          case 'w': updateScore('home', 2); break;
+          case 'e': updateScore('home', 3); break;
+          case 'a': updateScore('home', -1); break;
+          case 's': updateScore('home', -2); break;
+          case 'd': updateScore('home', -3); break;
+          // Away team controls
+          case 'u': updateScore('away', 1); break;
+          case 'i': updateScore('away', 2); break;
+          case 'o': updateScore('away', 3); break;
+          case 'j': updateScore('away', -1); break;
+          case 'k': updateScore('away', -2); break;
+          case 'l': updateScore('away', -3); break;
+          // Other controls
+          case 'v': open('viewer.html', '_blank'); break;
+          case 'x': swapTeams(); break;          
+          case ' ': toggleGameTimer(); break;
+          case 'r': resetGameTimer(); break;
+          case 't': resetTeamScores(); break;
+          case ',': resetShotClock(24); break;
+          case '.': resetShotClock(14); break;
+          case '1': setQuarter(1); break;
+          case '2': setQuarter(2); break;
+          case '3': setQuarter(3); break;
+          case '4': setQuarter(4); break;
+          case '5': setQuarter('OT'); break;
+          case '6': setQuarter('OT2'); break;
+          case '7': setQuarter('OT3'); break;
+          case '8': setQuarter('OT4'); break;
+          case '9': setQuarter('OT5'); break;
+        }
+      }
+    };
+
+    // Add initial keydown listener
+    document.addEventListener('keydown', keydownHandler);
+
+    function swapTeams() {
+      // Swap team names
+      const homeName = document.getElementById('home-team-name').value;
+      const awayName = document.getElementById('away-team-name').value;
+      document.getElementById('home-team-name').value = awayName;
+      document.getElementById('away-team-name').value = homeName;
+      
+      // Swap scores
+      const tempScore = homeScore;
+      homeScore = awayScore;
+      awayScore = tempScore;
+      document.getElementById('team-a-score').textContent = homeScore;
+      document.getElementById('team-b-score').textContent = awayScore;
+      
+      // Toggle ball possession
+      if (ballPosition === 'home') {
+        toggleArrow('away');
+      } else {
+        toggleArrow('home');
+      }
+    } 
+
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem('basketballScoreboard', JSON.stringify({
+          ballPosition: ballPosition,
+          homeScore: homeScore,
+          awayScore: awayScore,
+          homeTeamName: homeTeamName,
+          awayTeamName: awayTeamName,
+          gameTimeLeft: gameTimeLeft,
+          shotTimeLeft: shotTimeLeft,
+          currentQuarter: currentQuarter,
+          isGameTimerRunning: isGameTimerRunning,
+          homeFouls: homeFouls,
+          awayFouls: awayFouls
+        }));
+        showConnectionStatus('connected');
+      } catch (error) {
+        console.error('Failed to save to localStorage:', error);
+        showConnectionStatus('disconnected');
+      }
+    }
+
+    function resetTeamScores() {
+      homeScore = 0;
+      awayScore = 0;
+      document.getElementById('team-a-score').textContent = homeScore;
+      document.getElementById('team-b-score').textContent = awayScore;
+      saveToLocalStorage();
+    }
+
+    // Load initial state from localStorage if available
+    function loadFromLocalStorage() {
+      try {
+        const savedState = localStorage.getItem('basketballScoreboard');
+        if (savedState) {
+          const state = JSON.parse(savedState);
+          homeScore = state.homeScore || 0;
+          awayScore = state.awayScore || 0;
+          homeTeamName = state.homeTeamName || "HOME";
+          awayTeamName = state.awayTeamName || "AWAY";
+          gameTimeLeft = state.gameTimeLeft || 11 * 60;
+          shotTimeLeft = state.shotTimeLeft || 24;
+          currentQuarter = state.currentQuarter || 1;
+          isGameTimerRunning = state.isGameTimerRunning || false;
+          homeFouls = state.homeFouls || [false, false, false, false, false];
+          awayFouls = state.awayFouls || [false, false, false, false, false];
+          
+          // Update foul indicators
+          if (homeFouls) {
+            homeFouls.forEach((foul, index) => {
+              const circle = document.querySelector(`.team-score:nth-child(1) .foul-circle:nth-child(${index+1})`);
+              if (circle) circle.classList.toggle('active', foul);
+            });
+          }
+          if (awayFouls) {
+            awayFouls.forEach((foul, index) => {
+              const circle = document.querySelector(`.team-score:nth-child(3) .foul-circle:nth-child(${index+1})`);
+              if (circle) circle.classList.toggle('active', foul);
+            });
+          }
+          
+          document.getElementById('home-team-name').value = homeTeamName;
+          document.getElementById('away-team-name').value = awayTeamName;
+          
+          document.getElementById('team-a-score').textContent = homeScore;
+          document.getElementById('team-b-score').textContent = awayScore;
+          updateGameTimerDisplay();
+          updateShotClockDisplay();
+          setQuarter(currentQuarter);
+          
+          if (isGameTimerRunning) {
+            startPauseButton.textContent = 'PAUSE';
+          startPauseButton.classList.add('paused');
+          gameTimerInterval = setInterval(updateGameTimer, 1000);
+          if (gameTimeLeft > 24) {
+            shotClockInterval = setInterval(updateShotClock, 1000);
+          }
+          }
+          showConnectionStatus('connected');
+        } else {
+          showConnectionStatus('disconnected');
+        }
+      } catch (error) {
+        console.error('Failed to load from localStorage:', error);
+        showConnectionStatus('disconnected');
+      }
+    }
+
+    // Initialize
+    loadFromLocalStorage();
+    
+    let currentQuarter = 1;
+    let homeFouls = [false, false, false, false, false];
+    let awayFouls = [false, false, false, false, false];
+
+    function toggleFoul(team, index) {
+      const circles = document.querySelectorAll(`.team-score:nth-child(${team === 'home' ? 1 : 3}) .foul-circle`);
+      if (team === 'home') {
+        homeFouls[index-1] = !homeFouls[index-1];
+        circles[index-1].classList.toggle('active', homeFouls[index-1]);
+      } else {
+        awayFouls[index-1] = !awayFouls[index-1];
+        circles[index-1].classList.toggle('active', awayFouls[index-1]);
+      }
+      saveToLocalStorage();
+    }
+
+    function resetFouls() {
+      homeFouls = [false, false, false, false, false];
+      awayFouls = [false, false, false, false, false];
+      document.querySelectorAll('.foul-circle').forEach(circle => {
+        circle.classList.remove('active');
+      });
+      saveToLocalStorage();
+    }
+
+
+    // Visual feedback functions
+    function flashButton(buttonId) {
+      const button = document.getElementById(buttonId);
+      button.style.transform = 'scale(0.95)';
+      button.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+      setTimeout(() => {
+        button.style.transform = '';
+        button.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+      }, 100);
+    }
+
+    function flashQuarterButton(quarter) {
+      let button;
+      if (quarter === 'OT') {
+        button = document.querySelector('.quarter-btn:nth-child(5)');
+      } else {
+        button = document.querySelector(`.quarter-btn:nth-child(${quarter})`);
+      }
+      if (button) {
+        button.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          button.style.transform = '';
+        }, 100);
+      }
+    }
+
+    function flashScoreButton(team, points) {
+      const positive = points > 0;
+      const absPoints = Math.abs(points);
+      const buttonIndex = positive ? absPoints-1 : absPoints+2;
+      const selector = team === 'home' ? 
+        `.team-score:nth-child(1) .score-controls:nth-child(${positive ? 3 : 4}) button:nth-child(${buttonIndex})` :
+        `.team-score:nth-child(3) .score-controls:nth-child(${positive ? 3 : 4}) button:nth-child(${buttonIndex})`;
+      
+      const button = document.querySelector(selector);
+      if (button) {
+        button.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          button.style.transform = '';
+        }, 100);
+      }
+    }
+
+    function flashShotClockButton(seconds) {
+      const button = document.querySelector(`.shot-clock-controls button:nth-child(${seconds === 24 ? 1 : 2})`);
+      if (button) {
+        button.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          button.style.transform = '';
+        }, 100);
+      }
+    }
+
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      notification.style.position = 'fixed';
+      notification.style.top = '20px';
+      notification.style.left = '50%';
+      notification.style.transform = 'translateX(-50%)';
+      notification.style.backgroundColor = '#ff0000';
+      notification.style.color = '#fff';
+      notification.style.padding = '15px 30px';
+      notification.style.borderRadius = '5px';
+      notification.style.fontSize = '1.5em';
+      notification.style.fontWeight = 'bold';
+      notification.style.zIndex = '1000';
+      notification.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.style.transition = 'opacity 0.5s';
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 500);
+      }, 3000);
+    }
+
+    function toggleOtDropdown() {
+      const dropdown = document.getElementById('otDropdown');
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Close dropdown if clicked outside
+    window.addEventListener('click', function(event) {
+      const dropdown = document.getElementById('otDropdown');
+      const btn = document.getElementById('otDropdownBtn');
+      if (!btn.contains(event.target) && !dropdown.contains(event.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    function setQuarter(quarter) {
+      currentQuarter = quarter;
+      saveToLocalStorage();
+      const buttons = document.querySelectorAll('.quarter-btn');
+      buttons.forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      // Highlight normal quarter buttons 1-4
+      if (typeof quarter === 'number' && quarter >= 1 && quarter <= 4) {
+        const btn = document.querySelector(`.quarter-btn:nth-child(${quarter})`);
+        if (btn) btn.classList.add('active');
+        // Reset OT dropdown button text and style
+        const otBtn = document.getElementById('otDropdownBtn');
+        otBtn.textContent = 'OT';
+        otBtn.classList.remove('active');
+      } else if (typeof quarter === 'string' && quarter.startsWith('OT')) {
+        // Highlight OT dropdown button and update text
+        const otBtn = document.getElementById('otDropdownBtn');
+        otBtn.textContent = quarter;
+        otBtn.classList.add('active');
+      }
+      // Close dropdown after selection
+      document.getElementById('otDropdown').style.display = 'none';
+    }
+
+    function endPeriod() {
+      isGameTimerRunning = false;
+      startPauseButton.textContent = 'PLAY';
+      startPauseButton.classList.remove('paused');
+      clearInterval(gameTimerInterval);
+      
+      let message = currentQuarter < 4 ? `End of Q${currentQuarter}` : "Game Over!";
+      showNotification(message);
+      
+      if (currentQuarter < 4) {
+        currentQuarter++;
+        setQuarter(currentQuarter);
+        gameTimeLeft = 11 * 60;
+        updateGameTimerDisplay();
+      }
+      saveToLocalStorage();
+    }
+
+    // Periodically verify connection status
+    setInterval(() => {
+      try {
+        localStorage.getItem('basketballScoreboard');
+        showConnectionStatus('connected');
+      } catch (error) {
+        showConnectionStatus('disconnected');
+      }
+    }, 5000);
+  </script>
+</body>
+</html>

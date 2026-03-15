@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shot Clock Viewer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #000;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .shot-clock-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .shot-clock-label {
+      font-size: 3em;
+      color: #ff8c00;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .shot-clock {
+      font-family: 'LCDMono', monospace;
+      font-size: 30em;
+      color: #ffeb3b;
+      background-color: #222;
+      padding: 50px 100px;
+      border-radius: 20px;
+      text-align: center;
+      min-width: 500px;
+      box-shadow: 0 0 50px rgba(255, 235, 59, 0.3);
+    }
+
+    .shot-clock.warning {
+      color: #ff0000;
+      animation: pulse 0.5s infinite;
+    }
+
+    #connection-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 1em;
+      z-index: 1000;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @font-face {
+      font-family: 'LCDMono';
+      src: url('your-lcd-mono-font.woff2') format('woff2'),
+           url('your-lcd-mono-font.woff') format('woff');
+    }
+  </style>
+</head>
+<body>
+  <div class="shot-clock-container">
+    <div class="shot-clock-label">SHOT CLOCK</div>
+    <div class="shot-clock" id="shot-clock-display">24</div>
+  </div>
+
+  <script>
+    // Connection status element
+    const connectionStatus = document.createElement('div');
+    connectionStatus.id = 'connection-status';
+    document.body.appendChild(connectionStatus);
+
+    // Connection status display
+    function showConnectionStatus(status) {
+      const statusElement = document.getElementById('connection-status');
+      if (status === 'connected') {
+        statusElement.textContent = '✔';
+        statusElement.style.color = 'white';
+      } else {
+        statusElement.textContent = '✖';
+        statusElement.style.backgroundColor = '#F44336';
+        statusElement.style.color = 'white';
+      }
+    }
+
+    // Update display from localStorage
+    function updateShotClockDisplay() {
+      try {
+        const savedState = localStorage.getItem('basketballScoreboard');
+        if (!savedState) {
+          showConnectionStatus('disconnected');
+          return;
+        }
+        
+        const state = JSON.parse(savedState);
+        showConnectionStatus('connected');
+        
+        const shotClock = document.getElementById('shot-clock-display');
+        shotClock.textContent = state.shotTimeLeft.toString().padStart(2, '0');
+        shotClock.classList.toggle('warning', state.shotTimeLeft <= 5 && state.shotTimeLeft > 0);
+      } catch (error) {
+        console.error('Display update error:', error);
+        showConnectionStatus('disconnected');
+      }
+    }
+
+    // Listen for storage changes
+    window.addEventListener('storage', function(e) {
+      if (e.key === 'basketballScoreboard') {
+        updateShotClockDisplay();
+      }
+    });
+
+    // Initial update
+    updateShotClockDisplay();
+    
+    // Update interval
+    setInterval(updateShotClockDisplay, 1000);
+  </script>
+</body>
+</html>
